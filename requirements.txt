@@ -1,0 +1,4 @@
+tensorflow
+tensorflow_addons
+pillow
+pygame
