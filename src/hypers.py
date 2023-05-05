@@ -9,7 +9,7 @@ https://www.jiffy.iwilkey.com
 ###########################################
 
 # Windowed client dimensions (width, height).
-WINDOWED_CLIENT_SIZE = (int(1920 / 1.5), int(1080 / 1.5))
+WINDOWED_CLIENT_SIZE = (int(1920 / 1.2), int(1080 / 1.2))
 # The size of the GIF sample (width, height).
 GIF_SAMPLE_SIZE = (32, 32)
 # The number of frames to normalize the GIF to.

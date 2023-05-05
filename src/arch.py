@@ -5,12 +5,9 @@ https://www.jiffy.iwilkey.com
 """
 
 import threading
-
 import numpy as np
-
 import tensorflow as tf
 from tensorflow.keras import layers
-
 from gif import GIF
 from hypers import *
 
@@ -172,7 +169,7 @@ class JiffyTrainer(threading.Thread):
         print(f"[JiffyTrainer] SIGSTART RECEIVED. Starting.")
         
         # Load the target GIF.
-        TARGET_PATH = "../data/target/target.gif"
+        TARGET_PATH = "../data/data/target.gif"
         # Create a list of GIF objects to be used for training.
         gif_objects : GIF = []
         # Encapsulate the target GIF.

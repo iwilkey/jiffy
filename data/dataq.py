@@ -18,7 +18,7 @@ class DATAQ:
         """ DATAQ Constructor.
         """
         self.client_id = client_id
-        self.data_path = "./target/"
+        self.data_path = "./data/"
     
     def get_client_id(self):
         """ Returns the unique client ID for a DATAQ request.
@@ -83,6 +83,7 @@ class DATAQ:
         # Populate directory with target GIF.
         self.__download(target_phrase, phrase_target[target_gif_key])
         self.__pad_target(fixed_frames)
+        self.__augment_target()
         return True
     
     def __pad_target(self, fixed_frames : int):
@@ -112,6 +113,53 @@ class DATAQ:
             for i in range(num_additional_frames):
                 frames.append(last_frame.copy())
         frames[0].save(path_to_target, save_all=True, append_images=frames[1:], loop=0)
+
+
+    def __augment_target(self):
+        """ Create numerous agumented versions of the target GIF.
+        """
+        # Predefined augmentations. TODO: Make this list more robust for better performance.
+        augmentations = [
+            lambda x: x.transpose(Image.FLIP_LEFT_RIGHT),
+            lambda x: x.transpose(Image.FLIP_TOP_BOTTOM),
+            lambda x: x.transpose(Image.ROTATE_90),
+            lambda x: x.transpose(Image.ROTATE_180),
+            lambda x: x.transpose(Image.ROTATE_270),
+            lambda x: x.filter(ImageFilter.BLUR),
+            lambda x: x.filter(ImageFilter.CONTOUR),
+            lambda x: x.filter(ImageFilter.EMBOSS),
+            lambda x: x.filter(ImageFilter.FIND_EDGES),
+            lambda x: x.filter(ImageFilter.SHARPEN),
+            lambda x: x.convert('L').convert('RGB'),  # convert to grayscale then back to RGB for color jitter
+            lambda x: ImageEnhance.Color(x).enhance(random.uniform(0, 2.0)),  # adjust color saturation
+            lambda x: ImageEnhance.Brightness(x).enhance(random.uniform(0, 2.0)),  # adjust brightness
+            lambda x: ImageEnhance.Contrast(x).enhance(random.uniform(0, 2.0)),  # adjust contrast
+            lambda x: ImageEnhance.Sharpness(x).enhance(random.uniform(0, 2.0)),  # adjust sharpness
+            lambda x: x.crop((random.randint(0, x.size[0] // 2), random.randint(0, x.size[1] // 2), random.randint(x.size[0] // 2, x.size[0]), random.randint(x.size[1] // 2, x.size[1]))),  # crop image
+            lambda x: ImageOps.invert(x),  # invert image
+            lambda x: x.transform(x.size, Image.PERSPECTIVE, [random.uniform(-0.1, 0.1) for _ in range(8)], resample=Image.BICUBIC),  # apply random perspective transform
+            lambda x: x.transform(x.size, Image.AFFINE, [1, random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1), 0, 1, 0], resample=Image.BICUBIC),  # apply random shear
+            lambda x: x.transform(x.size, Image.AFFINE, [1, 0, 0, 0, 1, 0, random.uniform(-10, 10), random.uniform(-10, 10)], resample=Image.BICUBIC),  # apply random zoom
+        ]
+        ind = list(range(len(augmentations)))
+        random.shuffle(ind)
+        # Create a new GIF for each augmentation.
+        for i in range(len(ind)):
+            print(f"Augmenting target GIF #{i}...")
+            # Load the GIF file.
+            transform_func = augmentations[ind[i]]
+            with Image.open(f'{self.data_path}target.gif') as im:
+                # Iterate over the frames of the GIF.
+                frames = []
+                for frame in ImageSequence.Iterator(im):
+                    # Convert the frame to RGB mode.
+                    frame = frame.convert('RGB')
+                    # Apply the blur filter to the frame.
+                    frame = transform_func(frame)
+                    # Append the processed frame to the list of frames.
+                    frames.append(frame)
+                # Save the processed frames as a new GIF file.
+                frames[0].save(f"{self.data_path}augmented_target_{i}.gif", format='GIF', save_all=True, append_images=frames[1:], loop=0)
 
 data = DATAQ("localhost")
 data.get("./tgif-v1.0.csv", "cat", 16)
